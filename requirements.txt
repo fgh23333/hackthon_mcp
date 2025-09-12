@@ -1,0 +1,6 @@
+mcp
+pydantic
+langgraph
+pandas==2.3.0
+loguru
+httpx
