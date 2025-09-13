@@ -47,10 +47,6 @@ logger.info("--- 正在进行初始工具加载... ---")
 load_tools_from_dir(TOOLS_DIR)
 logger.info("--- 初始工具加载完成。 ---")
 
-if __name__ == "__main__":
-    try:
-        # --- 运行 MCP 服务器 ---
-        logger.info("--- 正在启动 MCP 服务器... ---")
-        mcp.run(transport="streamable-http")
-    except KeyboardInterrupt:
-        logger.info("--- 正在停止 MCP 服务器... ---")
+# --- 运行 MCP 服务器 ---
+logger.info("--- 正在启动 MCP 服务器... ---")
+mcp.run(transport="streamable-http")
