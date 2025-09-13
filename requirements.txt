@@ -6,3 +6,5 @@ loguru
 httpx
 ragflow-sdk
 pymysql
+langchain_openai
+langchain_experimental

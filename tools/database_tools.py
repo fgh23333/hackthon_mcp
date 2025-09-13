@@ -4,8 +4,7 @@ import json
 import pymysql
 from loguru import logger
 from dotenv import load_dotenv
-from datetime import datetime
-from typing import Optional, List
+from server import mcp
 
 load_dotenv()
 
@@ -30,6 +29,7 @@ def get_db_connection(db_name=None):
         logger.error(f"数据库连接失败: {e}")
         return None
 
+@mcp.tool()
 def list_databases() -> str:
     """连接到MySQL服务器并列出所有数据库的名称。当不确定有哪些数据库可用时调用。"""
     logger.info("--- 🛠️ 执行工具: list_databases ---")
@@ -50,6 +50,7 @@ def list_databases() -> str:
     finally:
         conn.close()
 
+@mcp.tool()
 def get_schema_of_database(db_name: str) -> str:
     """
     获取指定数据库的完整表结构（包括表名、字段名、字段类型、主键、是否可空、默认值和注释）。
@@ -86,6 +87,7 @@ def get_schema_of_database(db_name: str) -> str:
     finally:
         conn.close()
 
+@mcp.tool()
 def run_readonly_query_in_database(db_name: str, query: str) -> str:
     """
     在指定的数据库中执行只读SQL查询。
@@ -116,6 +118,7 @@ def run_readonly_query_in_database(db_name: str, query: str) -> str:
     finally:
         conn.close()
 
+@mcp.tool()
 def list_tables_in_database(db_name: str) -> str:
     """
     【后备工具】当get_schema_of_database工具失败时，用于列出指定数据库中的所有表名。
@@ -140,6 +143,7 @@ def list_tables_in_database(db_name: str) -> str:
     finally:
         conn.close()
 
+@mcp.tool()
 def describe_table_in_database(db_name: str, table_name: str) -> str:
     """
     【后备工具】当get_schema_of_database工具失败时，用于获取指定数据库中单个表的详细结构。
