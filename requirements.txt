@@ -9,3 +9,5 @@ pymysql
 langchain_openai
 langchain_experimental
 tavily-python
+tabulate
+matplotlib

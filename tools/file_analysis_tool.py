@@ -3,12 +3,16 @@ import pandas as pd
 import os
 import io
 import asyncio
+import uuid
+import matplotlib
+matplotlib.use('Agg')
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 from langchain_openai import ChatOpenAI
 from typing import Dict, Any
 from server import mcp  # Import from centralized app
 from logger import logger  # 从中央日志记录器导入
 from dotenv import load_dotenv
+from tabulate import tabulate
 
 # 加载环境变量
 load_dotenv()
@@ -51,18 +55,43 @@ async def analyze_csv_content(csv_content: str, question: str) -> str:
         llm=llm,
         df=df,
         verbose=False, # 设置为True可以在控制台查看LLM生成的Python代码
-        agent_executor_kwargs={"handle_parsing_errors": True}
+        agent_executor_kwargs={"handle_parsing_errors": True},
+        allow_dangerous_code=True,
+        max_iterations=15,
+        max_execution_time=120
     )
 
     logger.warning("--- [CSV内容分析工具 - 安全警告] 即将执行由LLM生成的Python代码进行数据分析。 ---")
+
+    plot_dir = "downloads"
+    os.makedirs(plot_dir, exist_ok=True)
+    plot_filename = f"plot_{uuid.uuid4()}.png"
+    plot_filepath = os.path.join(plot_dir, plot_filename).replace('\\', '/')
+
+    plot_instruction = (
+        f"IMPORTANT: If you need to generate a plot, you MUST save it as a file. "
+        f"Save the plot to the following path: '{plot_filepath}'. "
+        f"After saving, you MUST respond with ONLY the markdown for the image, like this: "
+        f"'![Generated Plot]({plot_filepath})'. "
+        f"DO NOT use plt.show(). Just save the file and return the markdown path."
+        f"\n\nUser's question: "
+    )
+    full_question = plot_instruction + question
+
     try:
         # The agent's ainvoke method is asynchronous
-        result = await pandas_agent_executor.ainvoke({"input": question})
+        result = await pandas_agent_executor.ainvoke({"input": full_question})
         
-        # Pandas DataFrame Agent 的结果通常在 "output" 键中
         output = result.get("output", "未能获得有效的输出。")
-        logger.info(f"--- [CSV内容分析工具(Gemini)] 分析完成，结果: {output[:200]}... ---") # 截断部分结果日志
-        return output
+        
+        # Check if the agent created a plot by checking if the file exists
+        if os.path.exists(plot_filepath):
+            logger.info(f"--- [CSV内容分析工具(Gemini)] 分析完成，生成了图表: {plot_filepath} ---")
+            return f"![Generated Plot]({plot_filepath})"
+        
+        # If no plot, return the text output. The agent formats its own output.
+        logger.info(f"--- [CSV内容分析工具(Gemini)] 分析完成，结果: {str(output)[:200]}... ---")
+        return str(output)
     except Exception as e:
         logger.error(f"--- [CSV内容分析工具(Gemini) ERROR] 执行Pandas代码分析时出错: {e} ---")
         return f"执行Pandas代码分析时出错: {e}"
