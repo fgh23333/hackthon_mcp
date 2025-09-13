@@ -5,6 +5,7 @@ from logger import logger
 from dotenv import load_dotenv
 from typing import Dict, Any, List
 from server import mcp
+import time
 
 load_dotenv()
 
@@ -146,4 +147,79 @@ async def list_documents(
         return {"error": f"HTTP error: {e.response.status_code} - {e.response.text}"}
     except Exception as e:
         logger.error(f"An unexpected error occurred while listing documents: {e}")
+        return {"error": str(e)}
+
+def _trigger_parsing_and_wait(dataset, document_ids: List[str], timeout: int = 20) -> Dict:
+    """
+    Triggers parsing for given document IDs and waits until all are done.
+
+    Args:
+        dataset: The dataset object from RAGFlow.
+        document_ids: List of document IDs to parse.
+        timeout: Max time to wait in seconds (default 20).
+
+    Returns:
+        A dictionary with status and message.
+    """
+    if not document_ids:
+        return {"status": "skipped", "message": "No documents to parse."}
+
+    try:
+        dataset.async_parse_documents(document_ids=document_ids)
+        logger.info(f"Parsing triggered for documents: {document_ids}")
+
+        for doc_id in document_ids:
+            i = 0
+            current_doc = dataset.list_documents(id=doc_id)[0]
+            while current_doc.run != "DONE":
+                logger.info(f"Current parsing status for {doc_id}: {current_doc.run}. Will sleep 1 second.")
+                time.sleep(1)
+                current_doc = dataset.list_documents(id=doc_id)[0]
+                i += 1
+                if i >= timeout:
+                    error_msg = f"Document parsing exceeded time limit: {timeout} s."
+                    logger.error(error_msg)
+                    return {"error": error_msg}
+                elif current_doc.run == "FAIL":
+                    error_msg = f"Document parsing failed for {doc_id}. Final status: {current_doc.run}"
+                    logger.error(error_msg)
+                    return {"error": error_msg}
+
+            logger.success(f"Parsing completed for {doc_id}. Final status: {current_doc.run}")
+
+        return {
+            "status": "success",
+            "message": f"Documents parsed successfully: {document_ids}"
+        }
+    except Exception as e:
+        logger.error(f"Error during parsing: {e}")
+        return {"error": str(e)}
+
+@mcp.tool()
+async def trigger_parsing_and_wait(
+    document_ids: List[str],
+    timeout: int = 20
+) -> Dict:
+    """
+    Triggers parsing for given document IDs and waits until all are done.
+
+    Args:
+        document_ids: List of document IDs to parse.
+        timeout: Max time to wait in seconds (default 20).
+
+    Returns:
+        A dictionary with status and message.
+    """
+    if not document_ids:
+        return {"status": "skipped", "message": "No documents to parse."}
+
+    try:
+        # 2. 获取 dataset 实例
+        dataset = rag_flow.list_datasets(id=RAGFLOW_DATASET_ID)[0]
+        result = await _trigger_parsing_and_wait(dataset, document_ids, timeout) # TODO wait
+        # 3. 调用内部函数处理解析逻辑
+        return result
+
+    except Exception as e:
+        logger.error(f"Error linking to RAGFlow dataset {RAGFLOW_DATASET_ID}: {e}")
         return {"error": str(e)}
