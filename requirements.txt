@@ -8,3 +8,4 @@ ragflow-sdk
 pymysql
 langchain_openai
 langchain_experimental
+tavily-python
