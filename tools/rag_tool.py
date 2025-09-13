@@ -11,7 +11,6 @@ load_dotenv()
 # --- RagFlow API 的配置 ---
 RAGFLOW_BASE_URL = os.getenv("RAGFLOW_BASE_URL", "http://localhost:8000")
 RAGFLOW_API_KEY = os.getenv("RAGFLOW_API_KEY", "YOUR_API_KEY_HERE")
-# 注意：这里的默认值仅用于向后兼容，新的函数实现将强制要求传入 dataset_id
 RAGFLOW_DATASET_ID = os.getenv("RAGFLOW_DATASET_ID", "YOUR_DATASET_ID_HERE")
 
 # 初始化 RAGFlow 客户端
