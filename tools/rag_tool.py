@@ -18,7 +18,7 @@ RAGFLOW_DATASET_ID = os.getenv("RAGFLOW_DATASET_ID", "YOUR_DATASET_ID_HERE")
 rag_flow = RAGFlow(api_key=RAGFLOW_API_KEY, base_url=RAGFLOW_BASE_URL)
 
 @mcp.tool()
-def knowledge_retrieval_tool(query: str, dataset_id: str) -> Dict[str, Any]:
+def knowledge_retrieval_tool(query: str, dataset_id: str = RAGFLOW_DATASET_ID) -> Dict[str, Any]:
     """
     根据用户问题，从指定的RagFlow知识库数据集中检索相关文档。
 

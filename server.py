@@ -4,12 +4,10 @@ import importlib.util
 import time
 from logger import logger  # 导入配置好的 logger
 
-os.environ["FASTMCP_PORT"] = "8000"
-os.environ["FASTMCP_HOST"] = "0.0.0.0"
 from mcp.server.fastmcp import FastMCP
 
 # 初始化 MCP 服务器实例
-mcp = FastMCP("Demo")
+mcp = FastMCP("Demo", port=8080, host="0.0.0.0")
 
 # 定义工具目录
 TOOLS_DIR = "tools"     
@@ -39,8 +37,6 @@ def load_tools_from_dir(dir_path: str):
             logger.success(f"成功加载工具模块: {dir_path}/{name}.py")
         except Exception as e:
             logger.error(f"加载 {dir_path}/{name}.py 失败: {e}")
-
-### 服务器启动和运行
 
 # --- 初始加载工具 ---
 logger.info("--- 正在进行初始工具加载... ---")
