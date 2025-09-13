@@ -51,6 +51,6 @@ if __name__ == "__main__":
     try:
         # --- 运行 MCP 服务器 ---
         logger.info("--- 正在启动 MCP 服务器... ---")
-        mcp.run(transport="streamable_http")
+        mcp.run(transport="streamable-http")
     except KeyboardInterrupt:
         logger.info("--- 正在停止 MCP 服务器... ---")

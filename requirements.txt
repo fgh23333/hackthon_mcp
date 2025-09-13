@@ -4,3 +4,4 @@ langgraph
 pandas==2.3.0
 loguru
 httpx
+ragflow-sdk
